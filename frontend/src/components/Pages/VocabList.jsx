@@ -8,6 +8,7 @@ const VocabList = () => {
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const maxVisiblePages = 5; // Maximum number of visible page buttons
 
     useEffect(() => {
         fetchVocabs();
@@ -30,7 +31,23 @@ const VocabList = () => {
     const currentVocabs = vocabs.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(vocabs.length / itemsPerPage);
 
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    // Calculate visible page numbers
+    const getVisiblePages = () => {
+        const half = Math.floor(maxVisiblePages / 2);
+        let start = Math.max(currentPage - half, 1);
+        let end = Math.min(start + maxVisiblePages - 1, totalPages);
+
+        if (end - start + 1 < maxVisiblePages) {
+            start = Math.max(end - maxVisiblePages + 1, 1);
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    };
+
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     if (loading) {
         return (
@@ -54,7 +71,7 @@ const VocabList = () => {
                             <p className="text-lg text-gray-600 mt-2">Master the Korean language one word at a time</p>
                         </div>
                         <Link 
-                            to="/add" 
+                            to="/addvocab" 
                             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -125,19 +142,26 @@ const VocabList = () => {
                                                     {Math.min(indexOfLastItem, vocabs.length)}
                                                 </span> of <span className="font-medium">{vocabs.length}</span> words
                                             </div>
-                                            <div className="flex space-x-2">
+                                            <div className="flex space-x-1">
+                                                <button
+                                                    onClick={() => paginate(1)}
+                                                    disabled={currentPage === 1}
+                                                    className={`px-3 py-1 rounded-md ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+                                                >
+                                                    «
+                                                </button>
                                                 <button
                                                     onClick={() => paginate(Math.max(1, currentPage - 1))}
                                                     disabled={currentPage === 1}
-                                                    className={`px-4 py-2 rounded-md ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+                                                    className={`px-3 py-1 rounded-md ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
                                                 >
-                                                    Previous
+                                                    ‹
                                                 </button>
-                                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                                                {getVisiblePages().map(number => (
                                                     <button
                                                         key={number}
                                                         onClick={() => paginate(number)}
-                                                        className={`px-4 py-2 rounded-md ${currentPage === number ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                                                        className={`px-4 py-1 rounded-md ${currentPage === number ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
                                                     >
                                                         {number}
                                                     </button>
@@ -145,9 +169,16 @@ const VocabList = () => {
                                                 <button
                                                     onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
                                                     disabled={currentPage === totalPages}
-                                                    className={`px-4 py-2 rounded-md ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+                                                    className={`px-3 py-1 rounded-md ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
                                                 >
-                                                    Next
+                                                    ›
+                                                </button>
+                                                <button
+                                                    onClick={() => paginate(totalPages)}
+                                                    disabled={currentPage === totalPages}
+                                                    className={`px-3 py-1 rounded-md ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+                                                >
+                                                    »
                                                 </button>
                                             </div>
                                         </div>
