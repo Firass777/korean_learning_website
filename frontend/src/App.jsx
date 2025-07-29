@@ -29,7 +29,7 @@ function App() {
             <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center">
               <span className="text-white font-bold text-xl">한</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">LearnKorean</span>
+            <span className="text-xl font-bold text-gray-900">Learn Korean</span>
           </div>
           <div className="hidden md:flex space-x-8">
             <Link to="/" className="text-gray-900 font-medium hover:text-red-500 transition">Home</Link>
@@ -65,7 +65,7 @@ function App() {
       {/* Footer Section */}
       <footer className="bg-gray-800 text-white text-center py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <p>&copy; 2025 Hello Hangul. All Rights Reserved.</p>
+          <p>&copy; 2025 Learn Korean. All Rights Reserved.</p>
         </div>
       </footer>
     </div>

@@ -30,17 +30,14 @@ const Quiz = () => {
     }, []);
 
     const generateQuizQuestions = () => {
-        // Shuffle all words and take the requested number
         const shuffledWords = [...vocabs].sort(() => 0.5 - Math.random()).slice(0, numQuestions);
         
-        // Create questions with options
         const questions = shuffledWords.map(word => {
-            // Get 2 random incorrect answers (excluding the correct one)
             const otherWords = vocabs.filter(v => v.id !== word.id);
             const shuffledIncorrect = [...otherWords].sort(() => 0.5 - Math.random()).slice(0, 2);
             const incorrectOptions = shuffledIncorrect.map(w => w.english);
             
-            // Combine with correct answer and shuffle options
+
             const options = [word.english, ...incorrectOptions]
                 .sort(() => 0.5 - Math.random())
                 .map((text, index) => ({ id: index, text }));

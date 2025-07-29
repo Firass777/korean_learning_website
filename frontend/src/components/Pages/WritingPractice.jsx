@@ -53,7 +53,6 @@ const WritingPractice = () => {
         const currentValue = userInputs[activeInputId] || '';
 
         if (key === '⌫') {
-            // Remove the last character and recompose
             const newValue = currentValue.slice(0, -1);
             handleInputChange(activeInputId, newValue);
         } else if (key === 'Space') {
@@ -71,7 +70,6 @@ const WritingPractice = () => {
                 setActiveInputId(nextInputId);
             }
         } else {
-            // Use hangul-js to compose Korean characters
             const jamoArray = Hangul.disassemble(currentValue + key);
             const composedValue = Hangul.assemble(jamoArray);
             handleInputChange(activeInputId, composedValue);
@@ -148,7 +146,7 @@ const WritingPractice = () => {
                                 <div className="space-y-6">
                                     {practiceWords.map((word) => (
                                         <div key={word.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                            <div className="text-2xl font-bold w-32">{word.korean}</div>
+                                            <div className="text-2xl font-bold w-32">{word.english}</div>
                                             <input
                                                 type="text"
                                                 name={word.id}
@@ -157,15 +155,15 @@ const WritingPractice = () => {
                                                 onFocus={() => handleInputFocus(word.id)}
                                                 ref={(el) => (inputRefs.current[word.id] = el)}
                                                 className="flex-1 px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                                placeholder="Type the English translation"
+                                                placeholder="Type the Korean word"
                                             />
                                             <div className="text-gray-600 w-48">
-                                                {userInputs[word.id] === word.english ? (
+                                                {userInputs[word.id] === word.korean ? (
                                                     <span className="text-green-600">✓ Correct</span>
                                                 ) : (
                                                     <button 
                                                         type="button" 
-                                                        onClick={() => handleInputChange(word.id, word.english)}
+                                                        onClick={() => handleInputChange(word.id, word.korean)}
                                                         className="text-sm text-indigo-600 hover:text-indigo-800"
                                                     >
                                                         Show Answer
