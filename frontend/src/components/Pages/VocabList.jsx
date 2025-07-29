@@ -4,20 +4,33 @@ import { Link } from 'react-router-dom';
 
 const VocabList = () => {
     const [vocabs, setVocabs] = useState([]);
+    const [filteredVocabs, setFilteredVocabs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
     const itemsPerPage = 10;
-    const maxVisiblePages = 5; // Maximum number of visible page buttons
+    const maxVisiblePages = 5;
 
     useEffect(() => {
         fetchVocabs();
     }, []);
 
+    useEffect(() => {
+        // Filter vocabs based on search term
+        const filtered = vocabs.filter(vocab => 
+            vocab.korean.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            vocab.english.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredVocabs(filtered);
+        setCurrentPage(1); // Reset to first page when search changes
+    }, [searchTerm, vocabs]);
+
     const fetchVocabs = async () => {
         try {
             const response = await axios.get('http://127.0.0.1:8000/api/vocab');
             setVocabs(response.data.data || []);
+            setFilteredVocabs(response.data.data || []);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching vocabs:', error);
@@ -28,10 +41,9 @@ const VocabList = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentVocabs = vocabs.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(vocabs.length / itemsPerPage);
+    const currentVocabs = filteredVocabs.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredVocabs.length / itemsPerPage);
 
-    // Calculate visible page numbers
     const getVisiblePages = () => {
         const half = Math.floor(maxVisiblePages / 2);
         let start = Math.max(currentPage - half, 1);
@@ -46,7 +58,15 @@ const VocabList = () => {
 
     const paginate = (pageNumber) => {
         setCurrentPage(pageNumber);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Smooth scroll to top of the vocabulary list section
+        const vocabListSection = document.getElementById('vocab-list-section');
+        if (vocabListSection) {
+            vocabListSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
     };
 
     if (loading) {
@@ -89,22 +109,54 @@ const VocabList = () => {
                 )}
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    <div className="lg:w-1/2">
+                    <div className="lg:w-1/2" id="vocab-list-section">
                         <div className="bg-white rounded-2xl shadow-lg overflow-hidden h-full">
                             <div className="p-6 border-b border-gray-200">
-                                <h2 className="text-2xl font-semibold text-gray-800">Vocabulary List</h2>
-                                <p className="text-gray-600 mt-1">{vocabs.length} words in your collection</p>
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div>
+                                        <h2 className="text-2xl font-semibold text-gray-800">Vocabulary List</h2>
+                                        <p className="text-gray-600 mt-1">{filteredVocabs.length} words found</p>
+                                    </div>
+                                    <div className="w-full sm:w-64">
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                </svg>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={searchTerm}
+                                                onChange={handleSearchChange}
+                                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                placeholder="Search words..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            {vocabs.length === 0 ? (
+                            {filteredVocabs.length === 0 ? (
                                 <div className="p-8 text-center">
                                     <div className="mx-auto h-24 w-24 text-indigo-100">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-full h-full">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                     </div>
-                                    <h3 className="mt-4 text-xl font-medium text-gray-900">Your vocabulary list is empty</h3>
-                                    <p className="mt-2 text-gray-600">Start building your Korean vocabulary by adding your first words</p>
+                                    <h3 className="mt-4 text-xl font-medium text-gray-900">
+                                        {searchTerm ? 'No matching words found' : 'Your vocabulary list is empty'}
+                                    </h3>
+                                    <p className="mt-2 text-gray-600">
+                                        {searchTerm ? 'Try a different search term' : 'Start building your Korean vocabulary by adding your first words'}
+                                    </p>
+                                    {searchTerm && (
+                                        <button
+                                            onClick={() => setSearchTerm('')}
+                                            className="mt-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
+                                        >
+                                            Clear search
+                                        </button>
+                                    )}
                                 </div>
                             ) : (
                                 <>
@@ -139,8 +191,8 @@ const VocabList = () => {
                                         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                                             <div className="text-sm text-gray-700">
                                                 Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to <span className="font-medium">
-                                                    {Math.min(indexOfLastItem, vocabs.length)}
-                                                </span> of <span className="font-medium">{vocabs.length}</span> words
+                                                    {Math.min(indexOfLastItem, filteredVocabs.length)}
+                                                </span> of <span className="font-medium">{filteredVocabs.length}</span> words
                                             </div>
                                             <div className="flex space-x-1">
                                                 <button
