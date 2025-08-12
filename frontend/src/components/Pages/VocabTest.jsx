@@ -12,8 +12,12 @@ const VocabTest = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showScoreModal, setShowScoreModal] = useState(false);
+    const [timer, setTimer] = useState(0);
+    const [isTimerRunning, setIsTimerRunning] = useState(false);
+    const [timerMode, setTimerMode] = useState('countup'); // 'countup' or 'countdown'
+    const [countdownDuration, setCountdownDuration] = useState(5); // minutes
     const itemsPerPage = 5;
-    const maxVisiblePages = 5; // Maximum number of visible page buttons
+    const maxVisiblePages = 5;
 
     useEffect(() => {
         const fetchVocabs = async () => {
@@ -31,6 +35,38 @@ const VocabTest = () => {
         fetchVocabs();
     }, []);
 
+    useEffect(() => {
+        let interval;
+        if (isTimerRunning) {
+            interval = setInterval(() => {
+                if (timerMode === 'countup') {
+                    setTimer(prev => prev + 1);
+                } else {
+                    setTimer(prev => {
+                        if (prev <= 1) {
+                            clearInterval(interval);
+                            setIsTimerRunning(false);
+                            handleTimeUp();
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isTimerRunning, timerMode]);
+
+    const handleTimeUp = () => {
+        const results = testWords.map((word) => ({
+            ...word,
+            userAnswer: userAnswers[word.id] || '',
+            isCorrect: (userAnswers[word.id] || '').toLowerCase().trim() === word.english.toLowerCase().trim(),
+        }));
+        setResults(results);
+        setShowScoreModal(true);
+    };
+
     const handleNumWordsSubmit = (e) => {
         e.preventDefault();
         const num = parseInt(numWords);
@@ -42,6 +78,8 @@ const VocabTest = () => {
         setResults(null);
         setUserAnswers({});
         setCurrentPage(1);
+        setTimer(timerMode === 'countup' ? 0 : countdownDuration * 60);
+        setIsTimerRunning(true);
 
         const shuffled = [...vocabs].sort(() => 0.5 - Math.random());
         const selectedWords = shuffled.slice(0, num);
@@ -54,6 +92,7 @@ const VocabTest = () => {
 
     const handleSubmitTest = (e) => {
         e.preventDefault();
+        setIsTimerRunning(false);
         const results = testWords.map((word) => ({
             ...word,
             userAnswer: userAnswers[word.id] || '',
@@ -64,6 +103,8 @@ const VocabTest = () => {
     };
 
     const handleReset = () => {
+        setIsTimerRunning(false);
+        setTimer(0);
         setNumWords('');
         setTestWords([]);
         setUserAnswers({});
@@ -71,6 +112,12 @@ const VocabTest = () => {
         setError(null);
         setCurrentPage(1);
         setShowScoreModal(false);
+    };
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
     const totalPages = Math.ceil(testWords.length / itemsPerPage);
@@ -83,7 +130,6 @@ const VocabTest = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Calculate visible page numbers
     const getVisiblePages = () => {
         const half = Math.floor(maxVisiblePages / 2);
         let start = Math.max(currentPage - half, 1);
@@ -120,7 +166,6 @@ const VocabTest = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            {/* Score Modal */}
             {showScoreModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-fade-in">
@@ -160,6 +205,9 @@ const VocabTest = () => {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                            <div className="mb-4 text-center">
+                                <p className="text-gray-600 font-medium">Time taken: {formatTime(timerMode === 'countup' ? timer : countdownDuration * 60 - timer)}</p>
                             </div>
                             <div className="flex justify-center space-x-4">
                                 <button
@@ -223,6 +271,62 @@ const VocabTest = () => {
                                             max={vocabs.length}
                                         />
                                     </div>
+                                    
+                                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                                        <div className="mb-4">
+                                            <h3 className="text-lg font-medium text-gray-800 mb-3">Timer Settings</h3>
+                                            <div className="flex flex-col sm:flex-row gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center space-x-3">
+                                                        <input
+                                                            type="radio"
+                                                            id="countup"
+                                                            name="timerMode"
+                                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                                                            checked={timerMode === 'countup'}
+                                                            onChange={() => setTimerMode('countup')}
+                                                        />
+                                                        <label htmlFor="countup" className="block text-sm font-medium text-gray-700">
+                                                            Count-up Timer
+                                                        </label>
+                                                    </div>
+                                                    <p className="mt-1 text-xs text-gray-500">Timer counts up from 00:00</p>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center space-x-3">
+                                                        <input
+                                                            type="radio"
+                                                            id="countdown"
+                                                            name="timerMode"
+                                                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                                                            checked={timerMode === 'countdown'}
+                                                            onChange={() => setTimerMode('countdown')}
+                                                        />
+                                                        <label htmlFor="countdown" className="block text-sm font-medium text-gray-700">
+                                                            Countdown Timer
+                                                        </label>
+                                                    </div>
+                                                    {timerMode === 'countdown' && (
+                                                        <div className="mt-2">
+                                                            <label htmlFor="countdownMinutes" className="block text-xs font-medium text-gray-700 mb-1">
+                                                                Minutes
+                                                            </label>
+                                                            <input
+                                                                type="number"
+                                                                id="countdownMinutes"
+                                                                value={countdownDuration}
+                                                                onChange={(e) => setCountdownDuration(Math.max(1, Math.min(60, parseInt(e.target.value) || 5)))}
+                                                                className="block w-full px-3 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                                                min="1"
+                                                                max="60"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {error && (
                                         <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg animate-shake">
                                             <p>{error}</p>
@@ -255,15 +359,33 @@ const VocabTest = () => {
                                     <h2 className="text-2xl font-semibold text-gray-800">
                                         {results ? 'Test Results' : 'Vocabulary Test'}
                                     </h2>
-                                    {results && (
-                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                            percentage >= 70 ? 'bg-green-100 text-green-800' :
-                                            percentage >= 40 ? 'bg-yellow-100 text-yellow-800' :
-                                            'bg-red-100 text-red-800'
-                                        }`}>
-                                            Score: {score}/{testWords.length}
-                                        </span>
-                                    )}
+                                    <div className="flex items-center space-x-4">
+                                        {results ? (
+                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                                percentage >= 70 ? 'bg-green-100 text-green-800' :
+                                                percentage >= 40 ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
+                                            }`}>
+                                                Score: {score}/{testWords.length}
+                                            </span>
+                                        ) : (
+                                            <div className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+                                                timerMode === 'countdown' && timer <= 30 ? 'bg-red-100 animate-pulse' : 'bg-indigo-100'
+                                            }`}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span className="font-bold text-indigo-800">
+                                                    {formatTime(timerMode === 'countup' ? timer : timer)}
+                                                </span>
+                                                {timerMode === 'countdown' && (
+                                                    <span className="text-sm text-indigo-600">
+                                                        / {formatTime(countdownDuration * 60)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
