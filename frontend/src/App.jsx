@@ -37,7 +37,7 @@ function App() {
           <div className="hidden md:flex space-x-8">
             <Link to="/" className="text-gray-900 font-medium hover:text-red-500 transition">Home</Link>
             <Link to="/vocab" className="text-gray-600 hover:text-red-500 transition">Vocabulary</Link>
-            <Link to="/grammar" className="text-gray-600 hover:text-red-500 transition">Grammar</Link>
+            <Link to="/paralist" className="text-gray-600 hover:text-red-500 transition">Reading Practice</Link>
             <Link to="/test" className="text-gray-600 hover:text-red-500 transition">Tests</Link>
             <Link to="/login" className="text-gray-600 hover:text-red-500 transition">Login</Link>
             <Link to="/register" className="text-gray-600 hover:text-red-500 transition">Register</Link>

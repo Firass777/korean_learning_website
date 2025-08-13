@@ -8,6 +8,8 @@ const ParagraphList = () => {
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [progress, setProgress] = useState(0);
+    const [jumpId, setJumpId] = useState('');
+    const [showJumpForm, setShowJumpForm] = useState(false);
 
     useEffect(() => {
         const fetchParagraphs = async () => {
@@ -34,6 +36,19 @@ const ParagraphList = () => {
 
     const handleNext = () => {
         setCurrentIndex(prev => (prev < paragraphs.length - 1 ? prev + 1 : 0));
+    };
+
+    const handleJumpToId = (e) => {
+        e.preventDefault();
+        const id = parseInt(jumpId);
+        if (isNaN(id)) return;
+
+        const foundIndex = paragraphs.findIndex(p => p.id === id);
+        if (foundIndex !== -1) {
+            setCurrentIndex(foundIndex);
+        }
+        setJumpId('');
+        setShowJumpForm(false);
     };
 
     if (loading) {
@@ -99,107 +114,152 @@ const ParagraphList = () => {
                     <p className="text-indigo-700/80">Read, learn, and master Korean</p>
                 </div>
 
-                <div className="relative">
-                    {/* Progress bar */}
-                    <div className="h-2 bg-white rounded-full mb-8 overflow-hidden shadow-inner">
-                        <motion.div 
-                            className="h-full bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 0.6 }}
-                        />
-                    </div>
+                {/* Jump section */}
+                <div className="flex justify-end mb-4 relative">
+                    {showJumpForm ? (
+                        <motion.form 
+                            onSubmit={handleJumpToId}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex items-center bg-white p-2 rounded-lg shadow"
+                        >
+                            <input
+                                type="number"
+                                value={jumpId}
+                                onChange={(e) => setJumpId(e.target.value)}
+                                placeholder="Enter number"
+                                className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                            <button 
+                                type="submit"
+                                className="ml-2 px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                            >
+                                Jump
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowJumpForm(false)}
+                                className="ml-2 p-1 text-gray-500 hover:text-gray-700"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        </motion.form>
+                    ) : (
+                        <button
+                            onClick={() => setShowJumpForm(true)}
+                            className="flex items-center px-3 py-1 bg-white rounded-lg shadow hover:bg-gray-50 transition-colors text-sm"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Jump 
+                        </button>
+                    )}
+                </div>
 
-                    {/* Side-by-side cards */}
+                {/* Progress bar */}
+                <div className="h-2 bg-white rounded-full mb-8 overflow-hidden shadow-inner">
                     <motion.div 
-                        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                        initial={{ scale: 0.98, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: 'spring', stiffness: 100 }}
-                        key={currentIndex}
-                    >
-                        {/* Korean Card (Left) */}
-                        <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-full">
-                            <div className="p-8 h-full flex flex-col">
-                                <div className="flex justify-between items-center mb-6">
+                        className="h-full bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 0.6 }}
+                    />
+                </div>
+
+                {/* Side-by-side cards */}
+                <motion.div 
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    initial={{ scale: 0.98, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 100 }}
+                    key={currentIndex}
+                >
+                    {/* Korean Card (Left) */}
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-full">
+                        <div className="p-8 h-full flex flex-col">
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="flex items-center space-x-3">
                                     <span className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-sm font-medium">
                                         🇰🇷 Korean
                                     </span>
-                                    <span className="text-sm text-gray-500">
-                                        {currentIndex + 1}/{paragraphs.length}
-                                    </span>
                                 </div>
-                                <div className="flex-grow flex items-center justify-center overflow-y-auto">
-                                    <p className="text-2xl text-gray-800 text-center leading-relaxed whitespace-pre-line">
-                                        {currentParagraph.korean}
-                                    </p>
-                                </div>
+                                <span className="text-sm text-gray-500">
+                                    {currentIndex + 1}/{paragraphs.length}
+                                </span>
+                            </div>
+                            <div className="flex-grow flex items-center justify-center overflow-y-auto">
+                                <p className="text-2xl text-gray-800 text-center leading-relaxed whitespace-pre-line">
+                                    {currentParagraph.korean}
+                                </p>
                             </div>
                         </div>
+                    </div>
 
-                        {/* English Card (Right) */}
-                        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-xl overflow-hidden h-full group relative">
-                            <div className="p-8 h-full flex flex-col">
-                                <div className="flex justify-between items-center mb-6">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-white text-indigo-800 text-sm font-medium shadow-sm">
-                                        🇬🇧 English
-                                    </span>
-                                    <span className="text-sm text-gray-500">
-                                        {currentIndex + 1}/{paragraphs.length}
-                                    </span>
-                                </div>
-                                <div className="flex-grow flex items-center justify-center overflow-y-auto">
-                                    <p className="text-xl text-gray-700 text-center leading-relaxed whitespace-pre-line transition-all duration-300 filter blur-sm group-hover:blur-none">
-                                        {currentParagraph.english}
-                                    </p>
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
-                                        <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm max-w-xs mx-auto">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                            <p className="text-sm text-indigo-600">Hover to reveal translation</p>
-                                        </div>
+                    {/* English Card (Right) */}
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-xl overflow-hidden h-full group relative">
+                        <div className="p-8 h-full flex flex-col">
+                            <div className="flex justify-between items-center mb-6">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full bg-white text-indigo-800 text-sm font-medium shadow-sm">
+                                    🇬🇧 English
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                    {currentIndex + 1}/{paragraphs.length}
+                                </span>
+                            </div>
+                            <div className="flex-grow flex items-center justify-center overflow-y-auto">
+                                <p className="text-xl text-gray-700 text-center leading-relaxed whitespace-pre-line transition-all duration-300 filter blur-sm group-hover:blur-none">
+                                    {currentParagraph.english}
+                                </p>
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
+                                    <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm max-w-xs mx-auto">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        <p className="text-sm text-indigo-600">Hover to reveal translation</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
+                </motion.div>
 
-                    {/* Controls */}
-                    <div className="mt-8 flex justify-between items-center">
-                        <button
-                            onClick={handlePrevious}
-                            className="flex items-center px-5 py-2.5 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors text-indigo-700"
+                {/* Controls */}
+                <div className="mt-8 flex justify-between items-center">
+                    <button
+                        onClick={handlePrevious}
+                        className="flex items-center px-5 py-2.5 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors text-indigo-700"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Previous
+                    </button>
+
+                    <div className="text-center">
+                        <Link
+                            to="/paraadd"
+                            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:shadow-md transition-all font-medium"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                             </svg>
-                            Previous
-                        </button>
-
-                        <div className="text-center">
-                            <Link
-                                to="/paraadd"
-                                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:shadow-md transition-all font-medium"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                                </svg>
-                                Add New Paragraph
-                            </Link>
-                        </div>
-
-                        <button
-                            onClick={handleNext}
-                            className="flex items-center px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl shadow hover:bg-indigo-600 transition-colors"
-                        >
-                            Next
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                            </svg>
-                        </button>
+                            Add New Paragraph
+                        </Link>
                     </div>
+
+                    <button
+                        onClick={handleNext}
+                        className="flex items-center px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl shadow hover:bg-indigo-600 transition-colors"
+                    >
+                        Next
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
