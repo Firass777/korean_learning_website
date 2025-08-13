@@ -4,6 +4,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\VocabController;
+use App\Http\Controllers\ParagraphController;
+
+Route::get('/paragraphs', [ParagraphController::class, 'index']);
+Route::post('/paragraphs', [ParagraphController::class, 'store']);
 
 
 Route::post('/register', [UsersController::class, 'register']);

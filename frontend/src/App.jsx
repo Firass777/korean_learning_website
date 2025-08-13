@@ -11,6 +11,9 @@ import VocabList from "./components/Pages/VocabList";
 import AddVocab from "./components/Pages/AddVocab";
 import VocabTest from "./components/Pages/VocabTest";
 
+import ParagraphAdd from "./components/Pages/ParagraphAdd";
+import ParagraphList from "./components/Pages/ParagraphList";
+
 import Quiz from "./components/Pages/Quiz";
 import Flashcards from "./components/Pages/Flashcards";
 import WritingPractice from "./components/Pages/WritingPractice";
@@ -59,6 +62,8 @@ function App() {
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/writing" element={<WritingPractice />} />
           <Route path="/flash" element={<Flashcards />} />
+          <Route path="/paraadd" element={<ParagraphAdd />} />
+          <Route path="/paralist" element={<ParagraphList />} />
         </Routes>
       </main>
 
