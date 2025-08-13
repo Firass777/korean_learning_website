@@ -9,11 +9,15 @@ const VocabList = () => {
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const [todaysWordsCount, setTodaysWordsCount] = useState(0);
+    const [streak, setStreak] = useState(0);
+    const [lastActiveDate, setLastActiveDate] = useState(null);
     const itemsPerPage = 10;
     const maxVisiblePages = 5;
 
     useEffect(() => {
         fetchVocabs();
+        fetchActivityData();
     }, []);
 
     useEffect(() => {
@@ -36,6 +40,63 @@ const VocabList = () => {
             console.error('Error fetching vocabs:', error);
             setError('Failed to load vocabulary. Please try again later.');
             setLoading(false);
+        }
+    };
+
+    const fetchActivityData = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:8000/api/vocab');
+            const allVocabs = response.data.data || [];
+            
+            // Get today's date range
+            const today = new Date();
+            const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+            const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+            
+            // Count today's words
+            const todaysVocabs = allVocabs.filter(vocab => {
+                const vocabDate = new Date(vocab.created_at);
+                return vocabDate >= new Date(startOfDay) && vocabDate <= new Date(endOfDay);
+            });
+            setTodaysWordsCount(todaysVocabs.length);
+            
+            // Calculate streak
+            const uniqueDates = [...new Set(
+                allVocabs.map(vocab => new Date(vocab.created_at).toDateString())
+            )].sort((a, b) => new Date(b) - new Date(a));
+            
+            let currentStreak = 0;
+            let lastDate = new Date();
+            
+            for (let i = 0; i < uniqueDates.length; i++) {
+                const date = new Date(uniqueDates[i]);
+                const diffTime = lastDate - date;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) {
+                    // Same day, skip
+                    continue;
+                } else if (diffDays === 1) {
+                    // Consecutive day
+                    currentStreak++;
+                    lastDate = date;
+                } else if (diffDays > 1) {
+                    // Streak broken
+                    break;
+                }
+            }
+            
+            // If today has activity, increment streak
+            if (todaysVocabs.length > 0 && 
+                (currentStreak === 0 || 
+                 new Date(uniqueDates[0]).toDateString() === new Date().toDateString())) {
+                currentStreak++;
+            }
+            
+            setStreak(currentStreak);
+            setLastActiveDate(uniqueDates[0] || null);
+        } catch (error) {
+            console.error('Error fetching activity data:', error);
         }
     };
 
@@ -241,17 +302,36 @@ const VocabList = () => {
                     </div>
 
                     <div className="lg:w-1/2 space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="bg-white rounded-2xl shadow-lg p-6">
                                 <h3 className="text-lg font-medium text-gray-500">Total Words</h3>
                                 <p className="text-3xl font-bold text-indigo-600 mt-2">{vocabs.length}</p>
                                 <p className="text-sm text-gray-500 mt-1">in your collection</p>
                             </div>
                             <div className="bg-white rounded-2xl shadow-lg p-6">
-                                <h3 className="text-lg font-medium text-gray-500">Daily Goal</h3>
-                                <p className="text-3xl font-bold text-indigo-600 mt-2">5/10</p>
+                                <h3 className="text-lg font-medium text-gray-500">Today's Activity</h3>
+                                <p className="text-3xl font-bold text-indigo-600 mt-2">{todaysWordsCount}</p>
+                                <p className="text-sm text-gray-500 mt-1">words added today</p>
                                 <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                                    <div className="bg-indigo-600 h-2.5 rounded-full" style={{width: '50%'}}></div>
+                                    <div 
+                                        className="bg-indigo-600 h-2.5 rounded-full" 
+                                        style={{ width: `${Math.min(100, todaysWordsCount * 10)}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                            <div className="bg-white rounded-2xl shadow-lg p-6">
+                                <h3 className="text-lg font-medium text-gray-500">Learning Streak</h3>
+                                <p className="text-3xl font-bold text-indigo-600 mt-2">{streak}</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {streak > 0 ? 
+                                        `🔥 ${streak} day${streak > 1 ? 's' : ''} in a row` : 
+                                        'Start your streak today!'}
+                                </p>
+                                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                    <div 
+                                        className="bg-indigo-600 h-2.5 rounded-full" 
+                                        style={{ width: `${Math.min(100, streak * 20)}%` }}
+                                    ></div>
                                 </div>
                             </div>
                         </div>
